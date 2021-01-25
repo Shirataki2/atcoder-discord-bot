@@ -67,7 +67,7 @@ impl Submission {
     pub async fn bulk_insert(pool: &sqlx::PgPool, account_id: i64, submissions: &[RawSubmission]) -> Result<(), AppError> {
         for submission in submissions.iter().cloned() {
             let submission = Submission::from(submission);
-            let result = query!(
+            if let Err(err) = query!(
                 "INSERT INTO submission 
                 (id, epoch_second, problem_id, contest_id, result, atcoder_id, language, point, length, execution_time, account_id)
                 VALUES 
@@ -85,15 +85,10 @@ impl Submission {
                 submission.execution_time,
                 account_id
             )
-            .fetch_one(pool)
+            .execute(pool)
             .compat()
-            .await;
-            match result {
-                Ok(_) | Err(sqlx::Error::RowNotFound) => {},
-                Err(err) => {
-                    error!("Insert Error: {:?}", err);
-                    return Err(err.into());
-                }
+            .await {
+                error!("Failed to insert submission: {:?}", err);
             }
         }
         Ok(())

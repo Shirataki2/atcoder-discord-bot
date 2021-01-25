@@ -22,4 +22,3 @@ https://discord.com/api/oauth2/authorize?client_id=801783771526856704&permission
 ### 4. `^subscribe`でAC情報を受け取る
 
 内部的にAtCoder Problems のAPIを利用しています．APIの更新頻度によって変わりますが概ね2-5分程度遅れて通知が送信されます．
-

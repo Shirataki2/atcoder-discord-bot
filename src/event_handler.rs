@@ -59,6 +59,20 @@ impl EventHandler for Handler {
         }
     }
 
+    async fn guild_delete(&self, ctx: Context, incomplete: GuildUnavailable, _: Option<Guild>) {
+        let guild_id = incomplete.id.0 as i64;
+        info!("Guild ID: {} deleted (or kicked)", guild_id);
+        let pool = {
+            let data = ctx.data.read().await;
+            data.get::<DatabasePool>().unwrap().clone()
+        };
+        if let Err(e) = models::guild::Guild::remove(&pool, guild_id).await {
+            error!("Failed to remove guild: {:?}", e);
+            return
+        }
+        info!("Guild {} removed", guild_id)
+    }
+
     async fn ready(&self, _: Context, ready: Ready) {
         info!("Connect as {}", ready.user.name);
     }

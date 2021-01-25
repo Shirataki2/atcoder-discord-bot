@@ -2,6 +2,8 @@ use tokio_compat_02::FutureExt;
 use serenity::model::channel::Message;
 use crate::error::{AppError, custom_error};
 
+type ExecuteResult = Result<sqlx::postgres::PgDone, AppError>;
+
 #[derive(Debug)]
 pub struct Account {
     pub id: i64,
@@ -46,17 +48,24 @@ impl Account {
         Ok(account)
     }
 
-    pub async fn create(pool: &sqlx::PgPool, msg: &Message, atcoder_id: &str) -> Result<(), AppError> {
-        let result = query!(
+    pub async fn create(pool: &sqlx::PgPool, msg: &Message, atcoder_id: &str) -> ExecuteResult {
+        query!(
             "INSERT INTO account(id, atcoder_id) VALUES ($1, $2)", msg.author.id.0 as i64, atcoder_id
         )
-        .fetch_one(pool)
+        .execute(pool)
         .compat()
-        .await;
-        match result {
-            Ok(_) | Err(sqlx::Error::RowNotFound) => Ok(()),
-            Err(err) => return Err(err.into()),
-        }
+        .await
+        .map_err(AppError::from)
+    }
+
+    pub async fn delete(pool: &sqlx::PgPool, msg: &Message) -> ExecuteResult {
+        query!(
+            "DELETE FROM account WHERE id = $1", msg.author.id.0 as i64
+        )
+        .execute(pool)
+        .compat()
+        .await
+        .map_err(AppError::from)
     }
 
     pub async fn is_subscribed(pool: &sqlx::PgPool, msg: &Message) -> Result<bool, AppError> {
@@ -77,35 +86,43 @@ impl Account {
         }
     }
 
-    pub async fn subscribe(pool: &sqlx::PgPool, msg: &Message) -> Result<(), AppError> {
+    pub async fn subscribe(pool: &sqlx::PgPool, msg: &Message) -> ExecuteResult {
         let guild_id = match msg.guild_id {
             Some(guild_id) => guild_id.0 as i64,
             None => return Err(custom_error("Guild ID is None. Called in DM!"))
         };
 
-        // 中間テーブルの追加
-        let result = query!(
+        query!(
             "INSERT INTO guild_accounts(guild_id, account_id) VALUES ($1, $2)", guild_id, msg.author.id.0 as i64
         )
-        .fetch_one(pool)
+        .execute(pool)
         .compat()
-        .await;
-        match result {
-            Ok(_) | Err(sqlx::Error::RowNotFound) => Ok(()),
-            Err(err) => Err(err.into()),
-        }
+        .await
+        .map_err(AppError::from)
     }
 
-    pub async fn update(pool: &sqlx::PgPool, id: i64, new_atcoder_id: &str) -> Result<(), sqlx::Error> {
-        let result = query!(
+    pub async fn unsubscribe(pool: &sqlx::PgPool, msg: &Message) -> ExecuteResult {
+        let guild_id = match msg.guild_id {
+            Some(guild_id) => guild_id.0 as i64,
+            None => return Err(custom_error("Guild ID is None. Called in DM!"))
+        };
+
+        query!(
+            "DELETE FROM guild_accounts WHERE guild_id = $1 AND account_id = $2", guild_id, msg.author.id.0 as i64
+        )
+        .execute(pool)
+        .compat()
+        .await
+        .map_err(AppError::from)
+    }
+
+    pub async fn update(pool: &sqlx::PgPool, id: i64, new_atcoder_id: &str) -> ExecuteResult {
+        query!(
             "UPDATE account SET atcoder_id = $2 WHERE id = $1", id, new_atcoder_id
         )
-        .fetch_one(pool)
+        .execute(pool)
         .compat()
-        .await;
-        match result {
-            Ok(_) | Err(sqlx::Error::RowNotFound) => Ok(()),
-            Err(err) => Err(err)
-        }
+        .await
+        .map_err(AppError::from)
     }
 }

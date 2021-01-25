@@ -23,9 +23,9 @@ use crate::{
 
 use commands::{
     help::*,
-    // general::adder::*,
-    account::{register::*, subscribe::*},
-    settings::start::*
+    general::{invite::*, source::*},
+    account::{register::*, unregister::*, subscribe::*, unsubscribe::*},
+    settings::{start::*, stop::*}
 };
 
 use std::{
@@ -93,6 +93,10 @@ async fn on_dispatch_error(ctx: &Context, msg: &Message, error: DispatchError) {
             let description = format!("You cannot run this command for {} seconds.", dur.as_secs());
             let _ = send_error(ctx, msg, "Rate Limited!", &description).await;
         }
+        DispatchError::LackingPermissions(perms) => {
+            let description = format!("This command requires `{}` permission(s).", perms);
+            let _ = send_error(ctx, msg, "Permission Error!", &description).await;
+        }
         _ => {
             error!("Unhandled dispatch error: {:?}", error);
         }
@@ -101,16 +105,16 @@ async fn on_dispatch_error(ctx: &Context, msg: &Message, error: DispatchError) {
 
 // * ---- Commands ---- * //
 
-// #[group]
-// #[commands(add)]
-// struct General;
+#[group]
+#[commands(invite, source)]
+struct General;
 
 #[group]
-#[commands(register, subscribe)]
+#[commands(register, unregister, subscribe, unsubscribe)]
 struct Account;
 
 #[group]
-#[commands(start)]
+#[commands(start, stop)]
 struct Settings;
 
 // * ---- Main ---- * //
@@ -142,7 +146,7 @@ async fn main() {
         .after(after)
         .on_dispatch_error(on_dispatch_error)
         .help(&MY_HELP)
-        //.group(&GENERAL_GROUP)
+        .group(&GENERAL_GROUP)
         .group(&SETTINGS_GROUP)
         .group(&ACCOUNT_GROUP);
 

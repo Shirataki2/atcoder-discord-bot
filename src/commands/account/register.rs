@@ -16,6 +16,7 @@ use crate::{
 
 #[command]
 #[only_in("guild")]
+#[aliases("r")]
 #[description(
     "Link your Discord user to AtCoder's user data. To receive notifications, type the command `^subscribe`."
 )]
