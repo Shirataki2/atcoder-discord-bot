@@ -121,7 +121,9 @@ struct Settings;
 
 #[tokio::main(flavor = "multi_thread", worker_threads = 8)]
 async fn main() {
-    dotenv().expect("Failed to load .env");
+    if let Err(e) = dotenv() {
+        warn!("Failed to load .env: {:?}", e);
+    }
     env_logger::init();
 
     let token = env::var("DISCORD_TOKEN")
