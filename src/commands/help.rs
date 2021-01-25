@@ -44,7 +44,7 @@ AtCoder Problems API is used internally, and notifications are sent 2-5 minutes 
 #[strikethrough_commands_tip_in_dm = "~~`Strikethrough commands`~~ are unavailabe because the bot is unable to run them."]
 #[strikethrough_commands_tip_in_guild = "~~`Strikethrough commands`~~ are unavailabe because the bot is unable to run them."]
 #[max_levenshtein_distance(3)]
-#[lacking_permissions = "Strike"]
+#[lacking_permissions = "Nothing"]
 #[wrong_channel = "Strike"]
 pub async fn my_help(
     context: &Context,
