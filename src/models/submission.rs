@@ -3,7 +3,7 @@ use serde::Deserialize;
 use crate::error::AppError;
 use tokio_compat_02::FutureExt;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Submission {
     pub id: i32,
     pub epoch_second: NaiveDateTime,

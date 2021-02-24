@@ -15,7 +15,7 @@ use crate::{
 
 #[command]
 #[only_in("guild")]
-#[required_permissions("MANAGE_MESSAGES")]
+//#[required_permissions("MANAGE_MESSAGES")]
 #[description(
     "Start sending notifications."
 )]

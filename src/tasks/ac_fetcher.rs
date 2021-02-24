@@ -10,7 +10,7 @@ use crate::{
     models::{account::Account, submission::Submission},
     data::DatabasePool,
     http::get_user_submissions,
-    utils::send_accepted_notification,
+    utils::insert_submission,
 };
 
 pub async fn ac_fetch(ctx: Arc<Context>) {
@@ -27,7 +27,7 @@ pub async fn ac_fetch(ctx: Arc<Context>) {
                 Ok(accounts) => {accounts}
                 Err(e) => {
                     error!("Failed to fetch accounts: {:?}", e);
-                    return;
+                    continue;
                 }
             };
             for account in accounts {
@@ -36,14 +36,14 @@ pub async fn ac_fetch(ctx: Arc<Context>) {
                     Ok(submissions) => {submissions}
                     Err(e) => {
                         error!("Failed to fetch old submissions: {:?}", e);
-                        return;
+                        continue;
                     }
                 };
                 let new_submissions = match get_user_submissions(&account.atcoder_id).await {
                     Ok(submissions) => {submissions}
                     Err(e) => {
                         error!("Failed to fetch submissions: {:?}", e);
-                        return;
+                        continue;
                     }
                 };
                 if let Err(e) = Submission::bulk_insert(&pool, account.id, &new_submissions).await {
@@ -57,8 +57,8 @@ pub async fn ac_fetch(ctx: Arc<Context>) {
                         continue;
                     }
                     if !old_submission_ids.contains(&submission.id) {
-                        // 3. サーバーに送信
-                        let _ = send_accepted_notification(&ctx, &account, &Submission::from(submission)).await;
+                        // 3. キューに押し込む
+                        let _ = insert_submission(&ctx, &account, &Submission::from(submission)).await;
                     }
                 }
                 tokio::time::sleep(Duration::from_secs(1)).await;

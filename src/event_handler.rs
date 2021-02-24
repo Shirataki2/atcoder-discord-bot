@@ -29,10 +29,17 @@ impl EventHandler for Handler {
         if *self.run_loops.lock().await {
             *self.run_loops.lock().await = false;
             let ctx = Arc::new(ctx);
+            let ctx_cloned = Arc::clone(&ctx);
             let ac_loop = tokio::spawn(async move {
-                tasks::ac_fetcher::ac_fetch(ctx).await
+                tasks::ac_fetcher::ac_fetch(ctx_cloned).await
             });
             let _ = ac_loop.await;
+
+            let ctx_cloned = Arc::clone(&ctx);
+            let submit_loop = tokio::spawn(async move {
+                tasks::submitter::submit_task(ctx_cloned).await
+            });
+            let _ = submit_loop.await;
             *self.run_loops.lock().await = false;
         }
     }

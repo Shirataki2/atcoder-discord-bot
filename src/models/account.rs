@@ -4,13 +4,13 @@ use crate::error::{AppError, custom_error};
 
 type ExecuteResult = Result<sqlx::postgres::PgDone, AppError>;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Account {
     pub id: i64,
     pub atcoder_id: String,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct GuildAccounts {
     pub id: i32,
     pub guild_id: i64,

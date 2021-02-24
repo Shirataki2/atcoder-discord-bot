@@ -3,7 +3,7 @@ use crate::error::AppError;
 
 type ExecuteResult = Result<sqlx::postgres::PgDone, AppError>;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Guild {
     pub id: i64,
     pub channel_id: Option<i64>,

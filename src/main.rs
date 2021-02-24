@@ -17,8 +17,9 @@ extern crate sqlx;
 
 use crate::{
     utils::send_error,
-    data::{DatabasePool, ShardManagerContainer},
-    event_handler::Handler
+    data::{DatabasePool, ShardManagerContainer, SubmissionQueue},
+    event_handler::Handler,
+    models::{account::Account as DiscordAccount, submission::Submission}
 };
 
 use commands::{
@@ -28,10 +29,7 @@ use commands::{
     settings::{start::*, stop::*}
 };
 
-use std::{
-    env,
-    collections::*,
-};
+use std::{collections::*, env, sync::Arc};
 
 use serenity::{
     prelude::*,
@@ -165,6 +163,9 @@ async fn main() {
     
         let pg_pool = database::create_pgpool().await.expect("Failed to connect database");
         data.insert::<DatabasePool>(pg_pool);
+
+        let map = Arc::new(Mutex::new(HashMap::<i64, VecDeque<(DiscordAccount, Submission)>>::new()));
+        data.insert::<SubmissionQueue>(map);
     }
 
     let shard_manager = client.shard_manager.clone();
