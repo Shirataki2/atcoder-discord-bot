@@ -1,9 +1,6 @@
 use std::collections::HashMap;
 use serde::Deserialize;
-use crate::{
-    models::submission::RawSubmission,
-    error::AppError
-};
+use crate::{error::AppError, models::{submission::RawSubmission, user_stat::{StreakData, ProblemCountData, PointSumData}}};
 
 const API_ENDPOINT: &str = "https://kenkoooo.com/atcoder";
 
@@ -67,4 +64,40 @@ pub async fn get_contest_name(contest_id: &str) -> Result<Option<String>, AppErr
         .map(|c| (c.id.clone(), c.title.clone()))
         .collect::<HashMap<String, String>>();
     Ok(resp.get(contest_id).cloned())
+}
+
+pub async fn get_streak() -> Result<Vec<StreakData>, AppError> {
+    let url = format!("{}/resources/streaks.json", API_ENDPOINT);
+    debug!("GET: {}", url);
+    let client = create_client()?;
+    let resp = client.get(&url)
+        .send()
+        .await?
+        .json::<Vec<StreakData>>()
+        .await?;
+    Ok(resp)
+}
+
+pub async fn get_problem_count() -> Result<Vec<ProblemCountData>, AppError> {
+    let url = format!("{}/resources/ac.json", API_ENDPOINT);
+    debug!("GET: {}", url);
+    let client = create_client()?;
+    let resp = client.get(&url)
+        .send()
+        .await?
+        .json::<Vec<ProblemCountData>>()
+        .await?;
+    Ok(resp)
+}
+
+pub async fn get_point_sum() -> Result<Vec<PointSumData>, AppError> {
+    let url = format!("{}/resources/sums.json", API_ENDPOINT);
+    debug!("GET: {}", url);
+    let client = create_client()?;
+    let resp = client.get(&url)
+        .send()
+        .await?
+        .json::<Vec<PointSumData>>()
+        .await?;
+    Ok(resp)
 }

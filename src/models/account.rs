@@ -38,6 +38,24 @@ impl Account {
         Ok(accounts)
     }
 
+    pub async fn list_accounts(pool: &sqlx::PgPool, guild_id: i64) -> Result<Vec<(String, i64)>, AppError> {
+        let accounts = query!(
+            r#"
+                SELECT atcoder_id, account_id FROM guild_accounts
+                INNER JOIN account
+                ON account.id = guild_accounts.account_id
+                WHERE guild_id = $1
+            "#, guild_id
+        )
+        .fetch_all(pool)
+        .compat()
+        .await?
+        .iter()
+        .map(|row| (row.atcoder_id.clone(), row.account_id))
+        .collect::<Vec<_>>();
+        Ok(accounts)
+    }
+
     pub async fn get(pool: &sqlx::PgPool, id: i64) -> Result<Self, AppError> {
         let account = query_as!(
             Self, "SELECT * FROM account WHERE id = $1", id

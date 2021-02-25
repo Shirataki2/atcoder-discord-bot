@@ -26,7 +26,8 @@ use commands::{
     help::*,
     general::{invite::*, source::*},
     account::{register::*, unregister::*, subscribe::*, unsubscribe::*},
-    settings::{start::*, stop::*}
+    settings::{start::*, stop::*},
+    stat::{streak::*, problem_count::*, point_sum::*},
 };
 
 use std::{collections::*, env, sync::Arc};
@@ -115,6 +116,10 @@ struct Account;
 #[commands(start, stop)]
 struct Settings;
 
+#[group]
+#[commands(streak, problem, point)]
+struct Ranking;
+
 // * ---- Main ---- * //
 
 #[tokio::main(flavor = "multi_thread", worker_threads = 8)]
@@ -148,7 +153,8 @@ async fn main() {
         .help(&MY_HELP)
         .group(&GENERAL_GROUP)
         .group(&SETTINGS_GROUP)
-        .group(&ACCOUNT_GROUP);
+        .group(&ACCOUNT_GROUP)
+        .group(&RANKING_GROUP);
 
     let mut client = Client::builder(&token)
         .framework(framework)

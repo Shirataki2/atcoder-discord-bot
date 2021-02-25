@@ -40,6 +40,13 @@ impl EventHandler for Handler {
                 tasks::submitter::submit_task(ctx_cloned).await
             });
             let _ = submit_loop.await;
+
+            let ctx_cloned = Arc::clone(&ctx);
+            let updater_loop = tokio::spawn(async move {
+                tasks::stat_updater::stat_updater(ctx_cloned).await
+            });
+            let _ = updater_loop.await;
+
             *self.run_loops.lock().await = false;
         }
     }
